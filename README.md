@@ -6,9 +6,10 @@
 3. Add the following `<div>` in the `<body>` of your `index.html`
 
 `<div class="loading-cover" id="loading-cover" style="background: #000; width: 100%; height: 100%; position: fixed; z-index: 100;"></div>`
-3. Add calls for ads and analytics in your game code
-4. Create a `.zip` archive of the game with the `index.html` at the root
-5. Upload build to the Wortal dashboard
+
+4. Add calls for ads and analytics in your game code
+5. Create a `.zip` archive of the game with the `index.html` at the root
+6. Upload build to the Wortal dashboard
 
 ## How to Use
 
