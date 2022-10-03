@@ -11,7 +11,7 @@
  *  This is necessary to hide the game rendering while pre-roll ads are shown on certain platforms.
  *  You should not show the game canvas or play any audio until <code>hasPlayedPreroll == true</code>.
  *
- * @version 1.3.1
+ * @version 1.3.2
  */
 
 const GAME_NAME = "MyGame";
@@ -45,8 +45,9 @@ const Placement = {
 const onInitWortal = new Event('WortalLoaded');
 
 let isWortalInit = false;
-let hasPlayedPreroll = false;
+let isAdBlocked = false;
 
+let hasPlayedPreroll = false;
 let linkInterstitialId = "";
 let linkRewardedId = "";
 
@@ -102,6 +103,10 @@ function _initWortalSdk() {
                     });
                 }
             }
+        }, function () {
+            console.log("[Wortal] Ad blocker detected.");
+            _removeLoadingCover();
+            isAdBlocked = true;
         });
 
         window.addEventListener('visibilitychange', () => {
@@ -138,6 +143,10 @@ function showInterstitial(placement, description, callbacks) {
     if (isWortalInit === false) return;
     if (placement === Placement.REWARD) return;
     if (placement === Placement.PREROLL && hasPlayedPreroll) return;
+    if (isAdBlocked) {
+        callbacks.afterAd();
+        return;
+    }
 
     const params = {};
     if (callbacks.beforeAd) {
@@ -177,7 +186,9 @@ function showInterstitial(placement, description, callbacks) {
  * @param {object} callbacks Object for callbacks. See the example above for definition.
  */
 function showRewarded(description, callbacks) {
-    if (isWortalInit === false) {
+    if (isWortalInit === false) return;
+    if (isAdBlocked) {
+        callbacks.afterAd();
         return;
     }
 
