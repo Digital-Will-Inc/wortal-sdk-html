@@ -154,8 +154,8 @@ function showInterstitial(placement, description, callbacks) {
     }
     if (callbacks.afterAd) {
         params.afterAd = callbacks.afterAd;
-        params.noShow = callbacks.noShow;
-        params.noBreak = callbacks.noShow;
+        params.noShow = callbacks.afterAd;
+        params.noBreak = callbacks.afterAd;
     }
     if (callbacks.adBreakDone) {
         params.adBreakDone = callbacks.adBreakDone;
@@ -198,8 +198,8 @@ function showRewarded(description, callbacks) {
     }
     if (callbacks.afterAd) {
         params.afterAd = callbacks.afterAd;
-        params.noShow = callbacks.noShow;
-        params.noBreak = callbacks.noShow;
+        params.noShow = callbacks.afterAd;
+        params.noBreak = callbacks.afterAd;
     }
     if (callbacks.adDismissed) {
         params.adDismissed = callbacks.adDismissed;
