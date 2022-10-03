@@ -152,13 +152,12 @@ function showInterstitial(placement, description, callbacks) {
     if (callbacks.beforeAd) {
         params.beforeAd = callbacks.beforeAd;
     }
+    // We should always receive only one of the following callbacks: afterAd, noShow or noBreak.
+    // They all signal that the ad event is complete and that we should resume the game now.
     if (callbacks.afterAd) {
         params.afterAd = callbacks.afterAd;
         params.noShow = callbacks.afterAd;
         params.noBreak = callbacks.afterAd;
-    }
-    if (callbacks.adBreakDone) {
-        params.adBreakDone = callbacks.adBreakDone;
     }
 
     window.triggerWortalAd(placement, linkInterstitialId, description, params);
@@ -196,6 +195,8 @@ function showRewarded(description, callbacks) {
     if (callbacks.beforeAd) {
         params.beforeAd = callbacks.beforeAd;
     }
+    // We should always receive only one of the following callbacks: afterAd, noShow or noBreak.
+    // They all signal that the ad event is complete and that we should resume the game now.
     if (callbacks.afterAd) {
         params.afterAd = callbacks.afterAd;
         params.noShow = callbacks.afterAd;
@@ -207,12 +208,8 @@ function showRewarded(description, callbacks) {
     if (callbacks.adViewed) {
         params.adViewed = callbacks.adViewed;
     }
-    if (callbacks.beforeReward) {
-        params.beforeReward = callbacks.beforeReward;
-    }
-    if (callbacks.adBreakDone) {
-        params.adBreakDone = callbacks.adBreakDone;
-    }
+    // This is only called on AdSense, we need to call showAdFn() here to trigger the ad to show.
+    params.beforeReward = function (showAdFn) { showAdFn() };
 
     window.triggerWortalAd(Placement.REWARD, linkRewardedId, description, params);
 }
