@@ -11,7 +11,7 @@
  *  This is necessary to hide the game rendering while pre-roll ads are shown on certain platforms.
  *  You should not show the game canvas or play any audio until <code>hasPlayedPreroll == true</code>.
  *
- * @version 1.3.1
+ * @version 1.3.2
  */
 
 const GAME_NAME = "MyGame";
@@ -45,8 +45,9 @@ const Placement = {
 const onInitWortal = new Event('WortalLoaded');
 
 let isWortalInit = false;
-let hasPlayedPreroll = false;
+let isAdBlocked = false;
 
+let hasPlayedPreroll = false;
 let linkInterstitialId = "";
 let linkRewardedId = "";
 
@@ -67,13 +68,7 @@ function _initWortalSdk() {
             isWortalInit = true;
             if (platform === 'wortal') {
                 showInterstitial(Placement.PREROLL, 'Preroll', {
-                    adBreakDone: function () {
-                        if (hasPlayedPreroll) return;
-                        _removeLoadingCover();
-                        window.dispatchEvent(onInitWortal);
-                        hasPlayedPreroll = true;
-                    },
-                    noShow: function () {
+                    afterAd: function () {
                         if (hasPlayedPreroll) return;
                         _removeLoadingCover();
                         window.dispatchEvent(onInitWortal);
@@ -82,22 +77,30 @@ function _initWortalSdk() {
                 });
             } else if (platform === 'link') {
                 _removeLoadingCover();
-                window.wortalGame.initializeAsync().then(() => {
-                    // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
-                    // The game will not start unless the loading progress is set to 100.
-                    window.wortalGame.startGameAsync();
-                    _getLinkAdUnitIds();
-                    hasPlayedPreroll = true;
-                });
+                if (window.wortalGame) {
+                    window.wortalGame.initializeAsync().then(() => {
+                        // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
+                        // The game will not start unless the loading progress is set to 100.
+                        window.wortalGame.startGameAsync();
+                        _getLinkAdUnitIds();
+                        hasPlayedPreroll = true;
+                    });
+                }
             } else if (platform === 'viber') {
                 _removeLoadingCover();
-                window.wortalGame.initializeAsync().then(() => {
-                    // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
-                    // The game will not start unless the loading progress is set to 100.
-                    window.wortalGame.startGameAsync();
-                    hasPlayedPreroll = true;
-                });
+                if (window.wortalGame) {
+                    window.wortalGame.initializeAsync().then(() => {
+                        // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
+                        // The game will not start unless the loading progress is set to 100.
+                        window.wortalGame.startGameAsync();
+                        hasPlayedPreroll = true;
+                    });
+                }
             }
+        }, function () {
+            console.log("[Wortal] Ad blocker detected.");
+            _removeLoadingCover();
+            isAdBlocked = true;
         });
 
         window.addEventListener('visibilitychange', () => {
@@ -134,18 +137,25 @@ function showInterstitial(placement, description, callbacks) {
     if (isWortalInit === false) return;
     if (placement === Placement.REWARD) return;
     if (placement === Placement.PREROLL && hasPlayedPreroll) return;
+    if (isAdBlocked) {
+        callbacks.afterAd();
+        return;
+    }
 
     const params = {};
     if (callbacks.beforeAd) {
         params.beforeAd = callbacks.beforeAd;
     }
+    // We should always receive only one of the following callbacks: afterAd, noShow or noBreak.
+    // They all signal that the ad event is complete and that we should resume the game now.
     if (callbacks.afterAd) {
         params.afterAd = callbacks.afterAd;
-        params.noShow = callbacks.noShow;
-        params.noBreak = callbacks.noShow;
+        params.noShow = callbacks.afterAd;
+        params.noBreak = callbacks.afterAd;
     }
-    if (callbacks.adBreakDone) {
-        params.adBreakDone = callbacks.adBreakDone;
+    // Preroll ads only return adBreakDone and/or noShow.
+    if (placement === Placement.PREROLL) {
+        params.adBreakDone = callbacks.afterAd;
     }
 
     window.triggerWortalAd(placement, linkInterstitialId, description, params);
@@ -173,7 +183,9 @@ function showInterstitial(placement, description, callbacks) {
  * @param {object} callbacks Object for callbacks. See the example above for definition.
  */
 function showRewarded(description, callbacks) {
-    if (isWortalInit === false) {
+    if (isWortalInit === false) return;
+    if (isAdBlocked) {
+        callbacks.afterAd();
         return;
     }
 
@@ -181,10 +193,12 @@ function showRewarded(description, callbacks) {
     if (callbacks.beforeAd) {
         params.beforeAd = callbacks.beforeAd;
     }
+    // We should always receive only one of the following callbacks: afterAd, noShow or noBreak.
+    // They all signal that the ad event is complete and that we should resume the game now.
     if (callbacks.afterAd) {
         params.afterAd = callbacks.afterAd;
-        params.noShow = callbacks.noShow;
-        params.noBreak = callbacks.noShow;
+        params.noShow = callbacks.afterAd;
+        params.noBreak = callbacks.afterAd;
     }
     if (callbacks.adDismissed) {
         params.adDismissed = callbacks.adDismissed;
@@ -192,12 +206,8 @@ function showRewarded(description, callbacks) {
     if (callbacks.adViewed) {
         params.adViewed = callbacks.adViewed;
     }
-    if (callbacks.beforeReward) {
-        params.beforeReward = callbacks.beforeReward;
-    }
-    if (callbacks.adBreakDone) {
-        params.adBreakDone = callbacks.adBreakDone;
-    }
+    // This is only called on AdSense, we need to call showAdFn() here to trigger the ad to show.
+    params.beforeReward = function (showAdFn) { showAdFn() };
 
     window.triggerWortalAd(Placement.REWARD, linkRewardedId, description, params);
 }
