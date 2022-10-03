@@ -68,13 +68,7 @@ function _initWortalSdk() {
             isWortalInit = true;
             if (platform === 'wortal') {
                 showInterstitial(Placement.PREROLL, 'Preroll', {
-                    adBreakDone: function () {
-                        if (hasPlayedPreroll) return;
-                        _removeLoadingCover();
-                        window.dispatchEvent(onInitWortal);
-                        hasPlayedPreroll = true;
-                    },
-                    noShow: function () {
+                    afterAd: function () {
                         if (hasPlayedPreroll) return;
                         _removeLoadingCover();
                         window.dispatchEvent(onInitWortal);
@@ -158,6 +152,10 @@ function showInterstitial(placement, description, callbacks) {
         params.afterAd = callbacks.afterAd;
         params.noShow = callbacks.afterAd;
         params.noBreak = callbacks.afterAd;
+    }
+    // Preroll ads only return adBreakDone and/or noShow.
+    if (placement === Placement.PREROLL) {
+        params.adBreakDone = callbacks.afterAd;
     }
 
     window.triggerWortalAd(placement, linkInterstitialId, description, params);
