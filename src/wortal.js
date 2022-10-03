@@ -82,21 +82,25 @@ function _initWortalSdk() {
                 });
             } else if (platform === 'link') {
                 _removeLoadingCover();
-                window.wortalGame.initializeAsync().then(() => {
-                    // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
-                    // The game will not start unless the loading progress is set to 100.
-                    window.wortalGame.startGameAsync();
-                    _getLinkAdUnitIds();
-                    hasPlayedPreroll = true;
-                });
+                if (window.wortalGame) {
+                    window.wortalGame.initializeAsync().then(() => {
+                        // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
+                        // The game will not start unless the loading progress is set to 100.
+                        window.wortalGame.startGameAsync();
+                        _getLinkAdUnitIds();
+                        hasPlayedPreroll = true;
+                    });
+                }
             } else if (platform === 'viber') {
                 _removeLoadingCover();
-                window.wortalGame.initializeAsync().then(() => {
-                    // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
-                    // The game will not start unless the loading progress is set to 100.
-                    window.wortalGame.startGameAsync();
-                    hasPlayedPreroll = true;
-                });
+                if (window.wortalGame) {
+                    window.wortalGame.initializeAsync().then(() => {
+                        // Set your game's loading progress with wortalGame.setLoadingProgress(value); Range is 0 to 100.
+                        // The game will not start unless the loading progress is set to 100.
+                        window.wortalGame.startGameAsync();
+                        hasPlayedPreroll = true;
+                    });
+                }
             }
         });
 
